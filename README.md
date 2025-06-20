@@ -4,9 +4,7 @@ This is an opinionated keyboard layout designed to centralize actions to the hom
 
 ## Design
 
-Keys are split into two sets:
-
-**{Left hand}** and **{Right hand}**, where the keys are split in a way to solve the **maximum cut problem** in graph theory.
+**{Left hand}** and **{Right hand}** sets, where the keys are split in a way to solve the **maximum cut problem** in graph theory.
 This way, in theory, the alternations between hands should be maximized.
 
 ## Executable

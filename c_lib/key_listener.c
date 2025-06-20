@@ -29,6 +29,16 @@ CGEventRef internal_c_callback(CGEventTapProxy proxy, CGEventType type,
     return event;
   }
 
+  // --- SYSTEM SHORTCUT PREVENTION ---
+  // Get the modifier flags for the current event.
+  CGEventFlags flags = CGEventGetFlags(event);
+
+  // If the Command key is held down, pass the event through immediately
+  // to allow system shortcuts like Cmd+Shift+` to work.
+  if ((flags & kCGEventFlagMaskCommand) != 0) {
+    return event;
+  }
+
   // If it's not our event, proceed with processing.
   if (type == kCGEventKeyDown || type == kCGEventKeyUp) {
     CGKeyCode keyCode =

@@ -15,7 +15,7 @@ This way, in theory, the alternations between hands should be maximized.
 
 `home-tui` is a helper application which displays the keys/chords to press for the next letter to exercise.
 
-[tui](https://github.com/user-attachments/assets/d9ff1e92-8008-464b-9a05-66c68bce6ad1)
+![tui](https://github.com/user-attachments/assets/d9ff1e92-8008-464b-9a05-66c68bce6ad1)
 
 ## Build
 

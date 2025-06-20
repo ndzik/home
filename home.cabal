@@ -1,0 +1,70 @@
+cabal-version:      3.0
+name:               home
+version:            0.1.0.0
+synopsis:           A Haskell application with a C core for key listening.
+license:            NONE
+author:             Your Name
+build-type:         Simple
+
+executable home
+    main-is:          Main.hs
+    hs-source-dirs:   app
+    default-language: GHC2021
+
+    -- We still need the threaded runtime.
+    ghc-options:      -threaded -rtsopts -with-rtsopts=-N
+
+    build-depends:    base
+        , containers
+        , home-lib
+        , stm
+        , yaml
+        , text
+
+    -- --- Linking Configuration ---
+    -- Directory where our C library header is located.
+    include-dirs:     c_lib
+
+    -- Directory where our compiled C library will be.
+    extra-lib-dirs:   c_lib
+
+    -- The name of the C library to link against.
+    -- `cabal` will look for `libkeylistener.a` or `libkeylistener.so`
+    extra-libraries:  keylistener
+
+    -- Tell cabal that it needs to link against this C source
+    c-sources: c_lib/key_listener.c
+
+    -- The C library needs this framework.
+    if os(osx)
+        frameworks:   ApplicationServices
+
+executable home-tui
+    main-is:          Main.hs
+    hs-source-dirs:   tui
+    default-language: GHC2021
+
+    ghc-options:      -threaded
+
+    -- The TUI depends on our library and the Brick/Vty libraries.
+    build-depends:    base,
+                      home-lib,
+                      brick,
+                      vty,
+                      containers,
+                      lens
+
+library home-lib
+    -- The modules exposed by this library.
+    exposed-modules:  Keymap
+
+    -- Location of the library's source code.
+    hs-source-dirs:   src
+
+    -- Dependencies needed by the library.
+    build-depends:    base,
+                      containers,
+                      yaml,
+                      text
+
+    default-language: GHC2021

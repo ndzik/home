@@ -126,13 +126,33 @@ symbolSequenceMap =
 -- Left and right hand are separated in their own columns.
 outputKeyMap :: KeyMaps -> FilePath -> IO ()
 outputKeyMap (KeyMaps km) path = do
-  writeFile path $ tableString keymapTable
+  writeFile path $
+    unlines
+      [ "Keymap Table",
+        "===========",
+        "",
+        "Left Hand Codes: 0, 1, 2, 3, 5",
+        "Right Hand Codes: 4, 38, 40, 37, 41",
+        "",
+        "Legend:",
+        "- = not pressed",
+        "X = pressed",
+        "",
+        "Singles:",
+        tableString $ mkKeymapTable 1,
+        "",
+        "Doubles:",
+        tableString $ mkKeymapTable 2,
+        "",
+        "Triples:",
+        tableString $ mkKeymapTable 3
+      ]
   where
     leftHandCodes = [0, 1, 2, 3, 5]
     rightHandCodes = [4, 38, 40, 37, 41]
     -- All possible activations for 5 keys.
-    relevantBitmaps = filter invalidOrImpossible $ generateBitmaps 5
-    activityMap =
+    relevantBitmaps n = filter (invalidOrImpossible n) $ generateBitmaps 5
+    activityMap n =
       map
         ( unwords
             . map
@@ -141,9 +161,9 @@ outputKeyMap (KeyMaps km) path = do
                   1 -> "X"
               )
         )
-        relevantBitmaps
+        $ relevantBitmaps n
 
-    output codes = map (bitmapToOutput codes) relevantBitmaps
+    output n codes = map (bitmapToOutput codes) $ relevantBitmaps n
     bitmapToOutput codes bs = outputKeys
       where
         outputKeys = case Map.lookup (sort activeKeys) km of
@@ -154,10 +174,10 @@ outputKeyMap (KeyMaps km) path = do
           Just (c, _) -> c
         activeKeys = filter (> (-1)) $ zipWith (\c b -> if b == 0 then -1 else c) codes bs
 
-    rows = zipWith4 (\lact lo ract ro -> rowG [lact, lo, ract, ro]) activityMap (output leftHandCodes) activityMap (output rightHandCodes)
     cs = [column (fixed 30) center def def, column (fixed 20) center def def, column (fixed 30) center def def, column (fixed 20) center def def]
     headers = titlesH ["Left" :: String, "Output", "Right", "Output"]
-    keymapTable = columnHeaderTableS cs unicodeS headers rows
+    mkKeymapTable n =
+      columnHeaderTableS cs unicodeS headers $ zipWith4 (\lact lo ract ro -> rowG [lact, lo, ract, ro]) (activityMap n) (output n leftHandCodes) (activityMap n) (output n rightHandCodes)
 
     -- \| Converts an integer to its n-bit binary representation as a list of 0s and 1s.
     --   The list is ordered from most significant bit to least significant.
@@ -173,4 +193,4 @@ outputKeyMap (KeyMaps km) path = do
       map (toBitmap bitCount) [0 .. 2 ^ bitCount - 1]
 
     -- invalidOrImpossible bitmap = not $ sum bitmap == 0 || sum bitmap == 5
-    invalidOrImpossible bitmap = sum bitmap == 2
+    invalidOrImpossible n bitmap = sum bitmap == n

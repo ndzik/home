@@ -54,7 +54,7 @@ convertParsedMaps pkm = do
     parseTuple (key, value) = do
       let keyStrings = T.splitOn "," key
       -- Sort the input keys to ensure consistent lookups.
-      ks <- mapM (readMaybe @CInt . T.unpack) keyStrings
+      ks <- sort <$> mapM (readMaybe @CInt . T.unpack) keyStrings
       return (ks, value)
 
 loadKeyMaps :: FilePath -> IO KeyMaps
@@ -158,8 +158,6 @@ outputKeyMap (KeyMaps km) path = do
     cs = [column (fixed 30) center def def, column (fixed 20) center def def, column (fixed 30) center def def, column (fixed 20) center def def]
     headers = titlesH ["Left" :: String, "Output", "Right", "Output"]
     keymapTable = columnHeaderTableS cs unicodeS headers rows
-
-    -- activityToKeymap act = zipWith ((lhc, a) ->   leftHandCodes act
 
     -- \| Converts an integer to its n-bit binary representation as a list of 0s and 1s.
     --   The list is ordered from most significant bit to least significant.

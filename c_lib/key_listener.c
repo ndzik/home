@@ -35,7 +35,8 @@ CGEventRef internal_c_callback(CGEventTapProxy proxy, CGEventType type,
 
   // If the Command key is held down, pass the event through immediately
   // to allow system shortcuts like Cmd+Shift+` to work.
-  if ((flags & kCGEventFlagMaskCommand) != 0) {
+  if (((flags & kCGEventFlagMaskCommand) != 0) ||
+      ((flags & kCGEventFlagMaskAlternate) != 0)) {
     return event;
   }
 

@@ -65,7 +65,9 @@ library home-lib
     build-depends:    base,
                       containers,
                       yaml,
-                      text
+                      text,
+                      table-layout,
+                      sort
 
     default-language: GHC2021
 
@@ -75,4 +77,6 @@ executable home-analysis
     default-language: GHC2021
     ghc-options:      -threaded
     build-depends:    base,
-                      containers
+                      containers,
+                      graphviz,
+                      text

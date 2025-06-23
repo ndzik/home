@@ -152,57 +152,13 @@ safeHead [] = Nothing
 charToKeycodeSequence :: Char -> [CInt]
 charToKeycodeSequence c = fromMaybe [fromMaybe 0 (Map.lookup c baseKeycodeMap)] (Map.lookup c symbolSequenceMap)
 
-baseKeycodeMap :: Map.Map Char CInt
-baseKeycodeMap =
-  Map.fromList
-    [ ('a', 0),
-      ('s', 1),
-      ('d', 2),
-      ('f', 3),
-      ('g', 5),
-      ('h', 4),
-      ('j', 38),
-      ('k', 40),
-      ('l', 37),
-      ('q', 12),
-      ('w', 13),
-      ('e', 14),
-      ('r', 15),
-      ('t', 17),
-      ('y', 6),
-      ('u', 32),
-      ('i', 34),
-      ('o', 31),
-      ('p', 35),
-      ('z', 16),
-      ('x', 7),
-      ('c', 8),
-      ('v', 9),
-      ('b', 11),
-      ('n', 45),
-      ('m', 46),
-      ('ö', 41)
-    ]
-
-symbolSequenceMap :: Map.Map Char [CInt]
-symbolSequenceMap =
-  Map.fromList
-    [ ('<', [50]),
-      ('>', [56, 50]),
-      ('{', [61, 26]),
-      ('}', [61, 25]),
-      ('[', [61, 28]),
-      (']', [61, 29]),
-      ('(', [56, 28]),
-      (')', [56, 25])
-    ]
-
 -- --- Main ---
 
 main :: IO ()
 main = do
   putStrLn "Loading keymaps for TUI..."
   keymaps <- loadKeyMaps "keymap_config.yaml"
+  outputKeyMap keymaps "keymap_table.txt"
 
   -- List of words with special chars for programming.
   let wordlist = cycle ["Haskell", "Brick{Keyboard}", "(Chording)", "Playground"]

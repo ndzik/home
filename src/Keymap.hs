@@ -1,20 +1,29 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Keymap
   ( KeyMaps (..),
     loadKeyMaps,
+    baseKeycodeMap,
+    symbolSequenceMap,
+    outputKeyMap,
     CInt,
   )
 where
 
+import Data.Bits
+import Data.Foldable (find)
+import Data.List (zip4, zipWith4)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
+import Data.Sort
 import Data.Text qualified as T
 import Data.Yaml (FromJSON (..), Value (..), decodeFileEither)
 import Foreign.C.Types (CInt)
 import GHC.Generics (Generic)
 import System.Exit (exitFailure)
+import Text.Layout.Table
 import Text.Read (readMaybe)
 
 -- The KeyMaps type now holds a single, unified map.
@@ -35,7 +44,6 @@ instance FromJSON CInt where
   parseJSON (Number n) = return $ fromInteger $ round n
   parseJSON _ = fail "Expected a number for CInt"
 
--- Convert the parsed YAML data into our clean KeyMaps.
 convertParsedMaps :: ParsedKeyMaps -> Maybe KeyMaps
 convertParsedMaps pkm = do
   let parsedTuples = Map.toList $ keymap pkm
@@ -49,7 +57,6 @@ convertParsedMaps pkm = do
       ks <- mapM (readMaybe @CInt . T.unpack) keyStrings
       return (ks, value)
 
--- IO action to load and parse the keymap from the YAML file.
 loadKeyMaps :: FilePath -> IO KeyMaps
 loadKeyMaps path = do
   eResult <- decodeFileEither path
@@ -64,3 +71,108 @@ loadKeyMaps path = do
           exitFailure
         Just keyMaps -> do
           return keyMaps
+
+baseKeycodeMap :: Map.Map Char CInt
+baseKeycodeMap =
+  Map.fromList
+    [ ('a', 0),
+      ('s', 1),
+      ('d', 2),
+      ('f', 3),
+      ('g', 5),
+      ('h', 4),
+      ('j', 38),
+      ('k', 40),
+      ('l', 37),
+      ('q', 12),
+      ('w', 13),
+      ('e', 14),
+      ('r', 15),
+      ('t', 17),
+      ('y', 6),
+      ('u', 32),
+      ('i', 34),
+      ('o', 31),
+      ('p', 35),
+      ('z', 16),
+      ('x', 7),
+      ('c', 8),
+      ('v', 9),
+      ('b', 11),
+      ('n', 45),
+      ('m', 46),
+      ('ö', 41)
+    ]
+
+symbolSequenceMap :: Map.Map Char [CInt]
+symbolSequenceMap =
+  Map.fromList
+    [ ('<', [50]),
+      ('>', [56, 50]),
+      ('{', [61, 26]),
+      ('}', [61, 25]),
+      ('[', [61, 28]),
+      (']', [61, 29]),
+      ('(', [56, 28]),
+      (')', [56, 25])
+    ]
+
+-- | Writes a table for the keymap to a file which visualizes the
+-- keys to press for each output.
+--
+-- ◼️ -> not pressed
+-- 🟩 -> pressed
+--
+-- Left and right hand are separated in their own columns.
+outputKeyMap :: KeyMaps -> FilePath -> IO ()
+outputKeyMap (KeyMaps km) path = do
+  writeFile path $ tableString keymapTable
+  where
+    leftHandCodes = [0, 1, 2, 3, 5]
+    rightHandCodes = [4, 38, 40, 37, 41]
+    -- All possible activations for 5 keys.
+    relevantBitmaps = filter invalidOrImpossible $ generateBitmaps 5
+    activityMap =
+      map
+        ( unwords
+            . map
+              ( \case
+                  0 -> "-"
+                  1 -> "X"
+              )
+        )
+        relevantBitmaps
+
+    output codes = map (bitmapToOutput codes) relevantBitmaps
+    bitmapToOutput codes bs = outputKeys
+      where
+        outputKeys = case Map.lookup (sort activeKeys) km of
+          Nothing -> "unmapped"
+          Just rs -> map findKeycode rs
+        findKeycode s = case find (\(_, c) -> c == s) $ Map.toList baseKeycodeMap of
+          Nothing -> ' '
+          Just (c, _) -> c
+        activeKeys = filter (> (-1)) $ zipWith (\c b -> if b == 0 then -1 else c) codes bs
+
+    rows = zipWith4 (\lact lo ract ro -> rowG [lact, lo, ract, ro]) activityMap (output leftHandCodes) activityMap (output rightHandCodes)
+    cs = [column (fixed 30) center def def, column (fixed 20) center def def, column (fixed 30) center def def, column (fixed 20) center def def]
+    headers = titlesH ["Left" :: String, "Output", "Right", "Output"]
+    keymapTable = columnHeaderTableS cs unicodeS headers rows
+
+    -- activityToKeymap act = zipWith ((lhc, a) ->   leftHandCodes act
+
+    -- \| Converts an integer to its n-bit binary representation as a list of 0s and 1s.
+    --   The list is ordered from most significant bit to least significant.
+    toBitmap :: Int -> Int -> [Int]
+    toBitmap bitCount number =
+      -- We map over the bit positions from left to right (e.g., for 5 bits: 4, 3, 2, 1, 0)
+      map (\pos -> if testBit number pos then 1 else 0) [bitCount - 1, bitCount - 2 .. 0]
+
+    -- \| Generates all possible n-bit bitmaps.
+    generateBitmaps :: Int -> [[Int]]
+    generateBitmaps bitCount =
+      -- We map our toBitmap function over all numbers from 0 to (2^n - 1).
+      map (toBitmap bitCount) [0 .. 2 ^ bitCount - 1]
+
+    -- invalidOrImpossible bitmap = not $ sum bitmap == 0 || sum bitmap == 5
+    invalidOrImpossible bitmap = sum bitmap == 2

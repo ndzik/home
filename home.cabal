@@ -52,7 +52,8 @@ executable home-tui
                       brick,
                       vty,
                       containers,
-                      lens
+                      lens,
+                      random
 
 library home-lib
     -- The modules exposed by this library.
@@ -79,4 +80,16 @@ executable home-analysis
     build-depends:    base,
                       containers,
                       graphviz,
-                      text
+                      text,
+                      directory,
+                      filepath
+
+executable home-patterns
+    main-is:          Main.hs
+    hs-source-dirs:   patterns
+    default-language: GHC2021
+    ghc-options:      -threaded -O2
+    build-depends:    base,
+                      containers,
+                      directory,
+                      filepath

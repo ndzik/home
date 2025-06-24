@@ -8,6 +8,7 @@ module Keymap
     baseKeycodeMap,
     symbolSequenceMap,
     outputKeyMap,
+    keycodeToCharMap,
     CInt,
   )
 where
@@ -71,6 +72,38 @@ loadKeyMaps path = do
           exitFailure
         Just keyMaps -> do
           return keyMaps
+
+keycodeToCharMap :: Map.Map CInt Char
+keycodeToCharMap =
+  Map.fromList
+    [ (0, 'a'),
+      (1, 's'),
+      (2, 'd'),
+      (3, 'f'),
+      (5, 'g'),
+      (4, 'h'),
+      (38, 'j'),
+      (40, 'k'),
+      (37, 'l'),
+      (12, 'q'),
+      (13, 'w'),
+      (14, 'e'),
+      (15, 'r'),
+      (17, 't'),
+      (6, 'y'),
+      (32, 'u'),
+      (34, 'i'),
+      (31, 'o'),
+      (35, 'p'),
+      (16, 'z'),
+      (7, 'x'),
+      (8, 'c'),
+      (9, 'v'),
+      (11, 'b'),
+      (45, 'n'),
+      (46, 'm'),
+      (41, 'ö')
+    ]
 
 baseKeycodeMap :: Map.Map Char CInt
 baseKeycodeMap =

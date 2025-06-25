@@ -8,7 +8,6 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Foreign.C.Types
 import Foreign.Ptr
--- Import our new shared library module
 import Keymap
 
 -- --- FFI Section ---
@@ -18,10 +17,10 @@ type KeyCallback = CInt -> CInt -> IO CInt
 foreign import ccall "wrapper"
   mkKeyCallback :: KeyCallback -> IO (FunPtr KeyCallback)
 
-foreign import ccall "key_listener.h start_key_listener"
+foreign import ccall safe "key_listener.h start_key_listener"
   c_start_key_listener :: FunPtr KeyCallback -> IO CInt
 
-foreign import ccall "key_listener.h send_key_event"
+foreign import ccall unsafe "key_listener.h send_key_event"
   c_send_key_event :: CInt -> CBool -> IO ()
 
 -- --- Chording Logic ---

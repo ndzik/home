@@ -15,6 +15,7 @@ jobs:
 
       - name: Insert keymap_table.txt into README.md
         run: |
+          echo "[INFO] Inserting contents of keymap_table.txt..."
           CONTENT=$(<keymap_table.txt)
           ESCAPED_CONTENT=$(printf '%s\n' "$CONTENT" | sed 's/`/\\`/g')
           awk -v replacement="\\\`\`\`\n$ESCAPED_CONTENT\n\\\`\`\`" '
@@ -23,16 +24,35 @@ jobs:
             /<!-- END:keymap_table -->/ { inside=0 }
             !inside
           ' README.md > README.tmp && mv README.tmp README.md
+          echo "[INFO] README update complete."
+
+      - name: Show Git status and remote
+        run: |
+          echo "[DEBUG] Current Git status:"
+          git status
+          echo "[DEBUG] Latest Git commit:"
+          git log -1 --oneline
+          echo "[DEBUG] Git remotes:"
+          git remote -v
 
       - name: Commit and push if changed
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
+          echo "[INFO] Configuring Git credentials..."
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          echo "[INFO] Updating remote to use PAT..."
           git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+
+          echo "[INFO] Checking for changes..."
           if ! git diff --quiet; then
+            echo "[INFO] Changes detected — committing."
             git add README.md
             git commit -m "Update README with keymap_table.txt"
-            git push
+            echo "[INFO] Pushing changes..."
+            git push origin HEAD:main
+          else
+            echo "[INFO] No changes to commit."
           fi

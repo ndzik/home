@@ -178,7 +178,10 @@ outputKeyMap (KeyMaps km) path = do
         tableString $ mkKeymapTable 2,
         "",
         "Triples:",
-        tableString $ mkKeymapTable 3
+        tableString $ mkKeymapTable 3,
+        "",
+        "Quadruples:",
+        tableString $ mkKeymapTable 4
       ]
   where
     leftHandCodes = [0, 1, 2, 3, 5]
@@ -207,7 +210,12 @@ outputKeyMap (KeyMaps km) path = do
           Just (c, _) -> c
         activeKeys = filter (> (-1)) $ zipWith (\c b -> if b == 0 then -1 else c) codes bs
 
-    cs = [column (fixed 30) center def def, column (fixed 20) center def def, column (fixed 30) center def def, column (fixed 20) center def def]
+    cs =
+      [ column (fixed 10) center def def,
+        column (fixed 10) center def def,
+        column (fixed 10) center def def,
+        column (fixed 10) center def def
+      ]
     headers = titlesH ["Left" :: String, "Output", "Right", "Output"]
     mkKeymapTable n =
       columnHeaderTableS cs unicodeS headers $ zipWith4 (\lact lo ract ro -> rowG [lact, lo, ract, ro]) (activityMap n) (output n leftHandCodes) (activityMap n) (output n rightHandCodes)

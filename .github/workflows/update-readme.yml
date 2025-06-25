@@ -1,0 +1,38 @@
+name: Inline keymap table into README
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Insert keymap_table.txt into README.md
+        run: |
+          CONTENT=$(<keymap_table.txt)
+          ESCAPED_CONTENT=$(printf '%s\n' "$CONTENT" | sed 's/`/\\`/g')
+          awk -v replacement="\\\`\`\`\n$ESCAPED_CONTENT\n\\\`\`\`" '
+            BEGIN { inside=0 }
+            /<!-- BEGIN:keymap_table -->/ { print; print replacement; inside=1; next }
+            /<!-- END:keymap_table -->/ { inside=0 }
+            !inside
+          ' README.md > README.tmp && mv README.tmp README.md
+
+      - name: Commit and push if changed
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
+          if ! git diff --quiet; then
+            git add README.md
+            git commit -m "Update README with keymap_table.txt"
+            git push
+          fi

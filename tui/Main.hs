@@ -18,6 +18,7 @@ import Data.Maybe (fromMaybe, listToMaybe, mapMaybe)
 import Data.Set qualified as Set
 import Graphics.Vty qualified as V
 import Keymap
+import System.Exit (exitSuccess)
 import System.Random
 
 data Hand = LeftHand | RightHand | NoHand deriving (Show, Eq)
@@ -275,6 +276,8 @@ main = do
   putStrLn "Loading keymaps for TUI..."
   keymaps <- loadKeyMaps "keymap_config.yaml"
   outputKeyMap keymaps "keymap_table.txt"
+
+  exitSuccess
 
   -- List of words with special chars for programming.
   let firstWord = head someWords

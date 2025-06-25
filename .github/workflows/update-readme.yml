@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write  # Enables commit/push using GITHUB_TOKEN
+
 jobs:
   update-readme:
     runs-on: ubuntu-latest
@@ -37,14 +40,11 @@ jobs:
 
       - name: Commit and push if changed
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "[INFO] Configuring Git credentials..."
+          echo "[INFO] Configuring Git..."
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          echo "[INFO] Updating remote to use PAT..."
-          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}
 
           echo "[INFO] Checking for changes..."
           if ! git diff --quiet; then
